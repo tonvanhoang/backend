@@ -24,9 +24,9 @@
     "mongoose": "^8.7.0",
     "morgan": "~1.9.1",
     "multer": "^1.4.5-lts.1",
-    "multer-gridfs-storage": "^5.0.2",
     "my-app": "file:",
     "nodemailer": "^6.9.15",
-    "nodemon": "^3.1.7"
+    "nodemon": "^3.1.7",
+    "socket.io": "^4.8.1"
   }
 }

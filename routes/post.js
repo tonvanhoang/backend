@@ -5,12 +5,11 @@ const modelsPost = require('../models/post');
 const modelsFriendship = require('../models/friendship');
 const multer = require('multer');
 const fs = require('fs');
-const path = require('path');
 
 // Cấu hình multer để tải ảnh lên
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const dir = './public/img/';
+    const dir = '../RenetFrontend/public/img/';
     
     // Kiểm tra và tạo thư mục nếu không tồn tại
     if (!fs.existsSync(dir)) {
@@ -67,32 +66,36 @@ router.put('/editStatus/:id', async function (req, res, next) {
   }
 })
 // API hiển thị bài viết theo quan hệ bạn bè
+// API hiển thị bài viết theo quan hệ bạn bè
 router.get('/friendsPosts/:idAccount', async function(req, res, next) {
   try {
     const { idAccount } = req.params;
-    // Tìm kiếm danh sách bạn bè (friendships) với trạng thái 'accepted'
+
+    // Tìm danh sách bạn bè với trạng thái 'accepted'
     const friendships = await modelsFriendship.find({
       $or: [
         { owner: idAccount, status: 'accepted' },
         { idAccount: idAccount, status: 'accepted' }
       ]
     }).populate('owner idAccount', '_id'); // Lấy _id của owner và idAccount
+
     // Tạo danh sách ID bao gồm cả idAccount và owner từ các mối quan hệ
     const relatedIds = friendships.reduce((acc, friend) => {
-      // Lấy cả owner và idAccount từ mỗi quan hệ bạn bè
+      // Kiểm tra nếu chủ sở hữu là tài khoản hiện tại, thêm bạn bè của họ
       if (friend.owner.toString() === idAccount.toString()) {
-        acc.push(friend.idAccount._id);
+        acc.push(friend.idAccount._id); // Thêm idAccount của bạn
       } else {
-        acc.push(friend.owner._id);
+        acc.push(friend.owner._id); // Thêm id của chủ sở hữu (owner)
       }
       return acc;
     }, [idAccount]); // Thêm idAccount của tài khoản đang đăng nhập vào danh sách
-    // Lấy bài viết từ tất cả các tài khoản liên quan (idAccount và bạn bè)
+
+    // Truy vấn các bài viết từ tất cả các tài khoản trong danh sách liên quan
     const posts = await modelsPost.find({
-      idAccount: { $in: relatedIds }, // Lọc bài viết bởi danh sách idAccount và owner
+      idAccount: { $in: relatedIds }, // Lọc bài viết bởi danh sách idAccount
       statusPost: 'on' // Chỉ lấy bài viết có trạng thái 'on'
     }).populate('idAccount', 'firstName') // Lấy thông tin tài khoản người đăng bài
-      .sort({ _id: -1 }); // Sắp xếp theo thứ tự bài mới nhất
+      .sort({ _id: -1 }); // Sắp xếp bài viết từ mới đến cũ
 
     // Trả về danh sách bài viết
     res.status(200).json(posts);
@@ -156,6 +159,22 @@ router.delete('/delete/:id', async function(req, res, next) {
   } catch (error) {
     console.error('Lỗi', error);
     res.status(500).json({ message: 'Đã xảy ra lỗi khi xóa bài viết', error });
+  }
+});
+
+// Thêm route upload ảnh đơn lẻ
+router.post('/upload', upload.single('avatar'), async (req, res, next) => {
+  try {
+      const { file } = req;
+      if (!file) {
+          return res.status(400).json({ status: 0, message: 'Không có tệp ảnh được tải lên' });
+      } else {
+          const url = `http://192.168.1.13:3000/img/${file.filename}`;
+          return res.status(200).json({ status: 1, url: url });
+      }
+  } catch (error) {
+      console.error('Lỗi khi tải ảnh lên:', error);
+      return res.status(500).json({ status: 0, message: 'Đã xảy ra lỗi khi tải ảnh lên' });
   }
 });
 

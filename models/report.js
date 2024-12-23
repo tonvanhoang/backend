@@ -1,19 +1,20 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const ObjectId = Schema.ObjectId;
-const report = new Schema({
+const reportSchema = new Schema({
   _id: { type: ObjectId },
   content: { type: String },
-  dateReport: { type: String , default:currentDate()},
-  idAccount: { type: String, ref: "account" },
-  owner:{type:String,ref:'account'},
-  idPost: { type: String, ref: "post" },
-  idReel: { type: String, ref: "reel" },
-  statusReport:{type:String,
-    default:'Chưa xác nhận'
-  },
+  dateReport: { type: String, default: currentDate() },
+  idAccount: { type: Schema.Types.ObjectId, ref: "account" },
+  owner: { type: Schema.Types.ObjectId, ref: "account" },
+  idPost: { type: Schema.Types.ObjectId, ref: "post" },
+  idReel: { type: Schema.Types.ObjectId, ref: "reel" },
+  type: { type: String, enum: ['post', 'reel'] },
   request:{type:String,
     default:'Không'
+  },
+  statusReport:{type:String,
+    default:'Chưa xác nhận'
   }
 });
 function currentDate() {
@@ -27,4 +28,4 @@ function currentDate() {
   return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
 }
 module.exports =
-  mongoose.models.report || mongoose.model("report", report);
+  mongoose.models.report || mongoose.model("report", reportSchema);
